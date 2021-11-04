@@ -20,9 +20,10 @@ def cmpX(a, b):
 def generate(file, lineHeight = 8, dpi = 500):
      dir_folder_images = "ocr-images"
      results = {}
-     lineHeight = 8
      pages = convert_from_path(os.path.abspath(os.getcwd()) + '/' + file, dpi)
      image_counter = 1
+
+     lineHeight = int(lineHeight)
 
      for page in pages:
           results[image_counter] = []

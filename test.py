@@ -25,14 +25,15 @@ if file.filename:
      results = ocr.generate(fn, lineheight)
 
      
-     print("<pre>")
+     
      for key, result in results.items():
           i = 0
-          print("<br><br><b style='font-size: 18px'>Page nr: " + str(key) + "</b>") 
+          print("<br><br><div style='background: #f3f3f3;padding-bottom: 20px;'><b style='font-size: 18px;padding-left:5px;padding-top:5px;'>Page nr: " + str(key) + "</b>") 
+          print("<pre>")
           for r in result:
                print("     [" + str(i) + "] => " + r + "")
                i = i + 1
-     print("</pre>")
+          print("</pre></div>")
 
      os.remove(fn)
 
