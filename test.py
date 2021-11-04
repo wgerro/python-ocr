@@ -6,6 +6,9 @@ import cgi
 import cgitb
 import os
 import time
+import sys
+
+sys.stdout.reconfigure(encoding='utf-8')
 cgitb.enable()
 
 form = cgi.FieldStorage()
@@ -18,7 +21,21 @@ if file.filename:
      customFileName = str(round(time.time() * 1000)) + os.path.basename(file.filename)
      fn = dirFolder + "/" + customFileName
      open(fn, 'wb').write(file.file.read())
-     print(ocr.generate(fn))
+
+     results = ocr.generate(fn, lineheight)
+
+     
+     print("<pre>")
+     for key, result in results.items():
+          i = 0
+          print("<br><br><b style='font-size: 18px'>Page nr: " + str(key) + "</b>") 
+          for r in result:
+               print("     [" + str(i) + "] => " + r + "")
+               i = i + 1
+     print("</pre>")
+
+     os.remove(fn)
+
 
 
 # ocr.generate('test.pdf')
