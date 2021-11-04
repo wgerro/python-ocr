@@ -1,1 +1,1 @@
-python-ocr
+# Python OCR Documents (PDF, IMG)
