@@ -17,12 +17,12 @@ def cmpX(a, b):
      else:
           return 1
 
-def generate(file, lineHeight = 8, dpi = 500):
+def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
      dir_folder_images = "ocr-images"
      results = {}
      pages = convert_from_path(os.path.abspath(os.getcwd()) + '/' + file, dpi)
      image_counter = 1
-
+     config_txt = '--oem 3 --psm ' + str(psm)
      lineHeight = int(lineHeight)
 
      for page in pages:
@@ -34,14 +34,18 @@ def generate(file, lineHeight = 8, dpi = 500):
           
      for i in range(1, image_counter):
           filename = dir_folder_images + "/page_" + str(i) + ".jpg"
-          boxes = pytesseract.image_to_data(Image.open(filename), lang="pol")
+          boxes = pytesseract.image_to_data(Image.open(filename), lang="pol", config=config_txt)
           filesize = float(os.path.getsize(filename)) / 1000000 #to mb
+          emptyPage = False
+          onlyTexts = []
+          
+          if (filesize < 0.15):
+               emptyPage = True
 
-          if (filesize > 0.2): #not empty image
+          if (emptyPage == False): #not empty image
                dataPage = []
                for box in boxes.splitlines():
                     row = box.split('\t')
-                    # print(row)
                     if (row[2].isdigit()):
                          checkText = re.sub(r'^\s+', '', row[11])
                          if (row[11] != '' and len(checkText) > 0):
@@ -91,7 +95,7 @@ def generate(file, lineHeight = 8, dpi = 500):
                          for v in value:
                               values[key].sort(key=lambda b:(b['xMin'], b['xMax']), reverse=False)
 
-               onlyTexts = []
+               
                if (len(values) > 0):
                     for key, value in values.items():
                          text = ""
@@ -101,7 +105,23 @@ def generate(file, lineHeight = 8, dpi = 500):
                          onlyTexts.append(text)
 
                # results[i].append(values)
-               results[i] = onlyTexts
+          results[i] = {'page': i, 'filename': filename, 'empty': emptyPage, 'texts': []}
+          results[i]['texts'] = onlyTexts
 
-          os.remove(filename)
+          if removeFile:
+               os.remove(filename)
      return results
+
+def saveFilePDF(images, title):
+     dirUploaded = 'ocr-saved-pdf'
+     listImages = []
+     for image in images:
+          im = Image.open(image)
+          listImages.append(im)
+
+     if len(listImages) > 1:
+          copyImages = listImages.copy()
+          copyImages.pop(0)
+          listImages[0].save(dirUploaded + '/' + str(title) + '.pdf', 'PDF', resolution=100.00, save_all=True, append_images=copyImages)
+     else: 
+          listImages[0].save(dirUploaded + '/' + str(title) + '.pdf', 'PDF', resolution=100.00, save_all=True)
