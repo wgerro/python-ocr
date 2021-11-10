@@ -19,7 +19,7 @@ dpi = form.getvalue('dpi')
 psm = form.getvalue('psm')
 
 file = form['file']
-dirFolder = 'ocr-pdf'
+dirFolder = 'ocr-uploaded'
 
 if file.filename:
      customFileName = str(round(time.time() * 1000)) + os.path.basename(file.filename)
@@ -103,6 +103,8 @@ if file.filename:
                          if dataPolicy[number_policy]['amount'] == "":
                               if len(re.findall(r'([\w\,\.]+)\s(ZŁ)', r.upper())) > 0:
                                    dataPolicy[number_policy]['amount'] = (re.findall(r'([\w\,\.]+)\s(ZŁ)', r.upper())[0][0]).replace('.','').replace(',','.')
+          elif insurance == "COMPENSA":
+               print('ERGO')
 
           if (number_policy in dataPolicy):
                dataPolicy[number_policy]['images'].append(result['filename'])

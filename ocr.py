@@ -4,6 +4,7 @@ import sys
 from pdf2image import convert_from_path
 import os
 import re
+import mimetypes
 
 def cmpY(a, b):
      if (a['yCenter'] <= b['yCenter']):
@@ -20,17 +21,26 @@ def cmpX(a, b):
 def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
      dir_folder_images = "ocr-images"
      results = {}
-     pages = convert_from_path(os.path.abspath(os.getcwd()) + '/' + file, dpi)
      image_counter = 1
      config_txt = '--oem 3 --psm ' + str(psm)
      lineHeight = int(lineHeight)
 
-     for page in pages:
-          results[image_counter] = []
+     
+     mimetype = mimetypes.guess_type(os.path.abspath(os.getcwd()) + '/' + file)[0] # 'application/pdf'
+
+     if (mimetype == "application/pdf"):
+          pages = convert_from_path(os.path.abspath(os.getcwd()) + '/' + file, dpi)
+          for page in pages:
+               results[image_counter] = []
+               filename = dir_folder_images + "/page_" + str(image_counter) + ".jpg"
+               page.save(filename, 'JPEG')
+               image_counter = image_counter + 1
+     else:
           filename = dir_folder_images + "/page_" + str(image_counter) + ".jpg"
-          page.save(filename, 'JPEG')
-          
-          image_counter = image_counter + 1
+          img = Image.open(file)
+          img.save(filename, "JPEG", quality=100, optimize=True, progressive=True)
+          image_counter = 2
+
           
      for i in range(1, image_counter):
           filename = dir_folder_images + "/page_" + str(i) + ".jpg"
@@ -113,7 +123,7 @@ def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
      return results
 
 def saveFilePDF(images, title):
-     dirUploaded = 'ocr-saved-pdf'
+     dirUploaded = 'ocr-saved'
      listImages = []
      for image in images:
           im = Image.open(image)
@@ -125,3 +135,8 @@ def saveFilePDF(images, title):
           listImages[0].save(dirUploaded + '/' + str(title) + '.pdf', 'PDF', resolution=100.00, save_all=True, append_images=copyImages)
      else: 
           listImages[0].save(dirUploaded + '/' + str(title) + '.pdf', 'PDF', resolution=100.00, save_all=True)
+
+def saveFileImage(image, title):
+     dirUploaded = 'ocr-saved'
+     img = Image.open(image)
+     img.save(dirUploaded + '/' + str(title) + '.jpg', "JPEG", quality=100, optimize=True, progressive=True)
