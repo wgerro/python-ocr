@@ -123,6 +123,11 @@ def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
      return results
 
 def saveFilePDF(images, title):
+     title = title.replace('/', '')
+
+     if len(images) == 0:
+          return 
+
      dirUploaded = 'ocr-saved'
      listImages = []
      for image in images:
@@ -136,7 +141,4 @@ def saveFilePDF(images, title):
      else: 
           listImages[0].save(dirUploaded + '/' + str(title) + '.pdf', 'PDF', resolution=100.00, save_all=True)
 
-def saveFileImage(image, title):
-     dirUploaded = 'ocr-saved'
-     img = Image.open(image)
-     img.save(dirUploaded + '/' + str(title) + '.jpg', "JPEG", quality=100, optimize=True, progressive=True)
+     return dirUploaded + '/' + str(title) + '.pdf'

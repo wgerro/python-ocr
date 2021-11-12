@@ -29,6 +29,7 @@
                                    Dla <b>ERGO</b> zalecane jest PSM 11 <br>
                                    Dla <b>WARTA NOWA</b> zalecane jest PSM 3 <br>
                                    Dla <b>WARTA</b> zalecane jest PSM 11 <br>
+                                   Dla <b>COMPENSA</b> zalecane jest PSM 11 <br>
                               </p>
                               <div style='display: inline-block'>
                                    <b>Line height:</b>
@@ -57,6 +58,10 @@
                                         <option value="13">13 - PSM_RAW_LINE - Traktuj obraz jako pojedynczą linię tekstu, omijając hacki specyficzne dla Tesseractu.</option>
                                    </select>
                               </div>
+                              <div style='display: block'>
+                                   <b>Pokaż logi:</b>
+                                   <input type="checkbox" name="islog" value="1">
+                              </div>
                          </div>
                     </div>
                </div>
@@ -70,13 +75,23 @@
                <div class="col-12  mt-2">
                     <div class="card">
                          <div class="card-header">
+                              Zczytane dane
+                         </div>
+                         <div class="card-body">
+                              <div class="row">
+                                   <div id="logs" class="col-12"></div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+               <div class="col-12  mt-2">
+                    <div class="card">
+                         <div class="card-header">
                               Logi
                          </div>
                          <div class="card-body">
                               <div class="row">
-                                   <div id="logs" class="col-12">
-
-                                   </div>
+                                   <div id="logs" class="col-12"></div>
                               </div>
                          </div>
                     </div>
@@ -94,6 +109,7 @@
      let lineHeight = document.querySelector('input[name=lineheight]');
      let dpi = document.querySelector('input[name=dpi]');
      let psm = document.querySelector('select[name=psm]');
+     let islog = document.querySelector('input[name=islog]');
      let logsDiv = document.getElementById('logs');
 
      let myDropzone = new Dropzone("#uploadFiles", { 
@@ -105,15 +121,57 @@
                     formData.append('lineheight', lineHeight.value)
                     formData.append('dpi', dpi.value)
                     formData.append('psm', psm.value)
+                    formData.append('islog', islog.checked ? 1 : 0)
                     logsDiv.innerHTML = "";
                })
 
                this.on('success', function(file, response) {
-                    console.log(file, response)
-                    logsDiv.innerHTML = response;
+                    let html = ''
+                    response = JSON.parse(response);
+                    for (i in response.data) {
+                         html += printLog(response.data[i]);
+                    }
+                    logsDiv.innerHTML = html;
                })
           }
      });
+
+     function printLog(data = {}) {
+          data.number_policy = data.number_policy ? data.number_policy : '';
+          data.vehicle = data.vehicle ? data.vehicle : '';
+          data.start_date = data.start_date ? data.start_date : '';
+          data.end_date = data.end_date ? data.end_date : '';
+          data.amount = data.amount ? data.amount : '';
+          data.file_url = data.file_url ? data.file_url : '';
+
+          let text = `
+               <form class='border-bottom mb-2'>
+                    <div class="row">
+                         <div class="col-md-4 mb-2">
+                              <input type="text" class="form-control form-control-sm" id="validationCustom01" title="Numer polisy" value="${data.number_policy}" required>
+                         </div>
+                         <div class="col-md-4 mb-2">
+                              <input type="text" class="form-control form-control-sm" id="validationCustom01" title="Nr rejestracyjny" value="${data.vehicle}" required>
+                         </div>
+                         <div class="col-md-4 mb-2">
+                              <input type="text" class="form-control form-control-sm" id="validationCustom01" title=">Data zakończenia" value="${data.amount}" required>
+                         </div>
+                         <div class="col-md-4 mb-2">
+                              <input type="text" class="form-control form-control-sm" id="validationCustom01" title="Data rozpoczecia" value="${data.start_date}" required>
+                         </div>
+                         <div class="col-md-4 mb-2">
+                              <input type="text" class="form-control form-control-sm" id="validationCustom01" title="Data zakończenia" value="${data.end_date}" required>
+                         </div>
+                         <div class="col-md-4 mb-2 d-flex">
+                              <a href="${data.file_url}" class="btn btn-warning btn-sm w-50 rounded-0" target="_blank">PDF</a>
+                              <button class="btn btn-primary btn-sm w-50 rounded-0" type="submit">Importuj</button>
+                         </div>
+                    </div>
+                    
+               </form>
+          `;
+          return text;
+     }
      
      </script>
 </body>
