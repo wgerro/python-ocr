@@ -20,6 +20,10 @@ def cmpX(a, b):
 
 def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
      dir_folder_images = "ocr-images"
+
+     if not os.path.exists(dir_folder_images):
+          os.makedirs(dir_folder_images)
+
      results = {}
      image_counter = 1
      config_txt = '--oem 3 --psm ' + str(psm)
@@ -129,6 +133,10 @@ def saveFilePDF(images, title):
           return 
 
      dirUploaded = 'ocr-saved'
+
+     if not os.path.exists(dirUploaded):
+          os.makedirs(dirUploaded)
+
      listImages = []
      for image in images:
           im = Image.open(image)

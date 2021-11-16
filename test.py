@@ -10,10 +10,25 @@ import sys
 import re
 import unicodereplace
 import json
+import mimetypes
 
-sys.stdout.reconfigure(encoding='utf-8')
 cgitb.enable()
+# print(os.environ.keys())
 
+allows_url = ['https://localhost', 'https://erp.avenir-as.pl', 'https://erp.avenir-as.pl/']
+
+if 'HTTP_ORIGIN' not in os.environ.keys():
+     print('403 Forbidden')
+     exit()
+
+if os.environ['HTTP_ORIGIN'] not in allows_url:
+     print('403 Forbidden')
+     exit()
+
+if os.environ['REQUEST_METHOD'] != 'POST':
+     print('403 Forbidden')
+     exit()
+     
 form = cgi.FieldStorage()
 lineheight =  form.getvalue('lineheight')
 dpi = form.getvalue('dpi')
@@ -23,8 +38,15 @@ islog = form.getvalue('islog')
 file = form['file']
 dirFolder = 'ocr-uploaded'
 
-if file.filename:
+mimetype = mimetypes.guess_type(file.filename)[0] # 'application/pdf', 'image/jpeg'
+mimetypes_allows = ['image/jpeg', 'application/pdf']
+
+if mimetype in mimetypes_allows:
      customFileName = str(round(time.time() * 1000)) + os.path.basename(file.filename)
+
+     if not os.path.exists(dirFolder):
+          os.makedirs(dirFolder)
+
      fn = dirFolder + "/" + customFileName
      open(fn, 'wb').write(file.file.read())
 
@@ -40,6 +62,7 @@ if file.filename:
           "vehicle": "", 
           "amount": "",
           "file_url": "",
+          "insurer": "",
           "images": []
      }
 
@@ -66,6 +89,7 @@ if file.filename:
                               dataPolicy[number_policy] = params.copy()
                               dataPolicy[number_policy]['images'] = []
                               dataPolicy[number_policy]['number_policy'] = number_policy
+                              dataPolicy[number_policy]['insurer'] = insurance
                          
                     
                     if number_policy in dataPolicy:
@@ -95,6 +119,7 @@ if file.filename:
                               dataPolicy[number_policy] = params.copy()
                               dataPolicy[number_policy]['images'] = []
                               dataPolicy[number_policy]['number_policy'] = number_policy
+                              dataPolicy[number_policy]['insurer'] = insurance
 
                     if number_policy in dataPolicy:
                          if dataPolicy[number_policy]['start_date'] == "" and dataPolicy[number_policy]['end_date'] == "":
@@ -119,6 +144,7 @@ if file.filename:
                               dataPolicy[number_policy] = params.copy()
                               dataPolicy[number_policy]['images'] = []
                               dataPolicy[number_policy]['number_policy'] = number_policy
+                              dataPolicy[number_policy]['insurer'] = insurance
 
                     if number_policy in dataPolicy:
                          if dataPolicy[number_policy]['start_date'] == "" and dataPolicy[number_policy]['end_date'] == "":
@@ -158,24 +184,27 @@ if file.filename:
                if (d['start_date'] != '' and d['end_date'] != '' and d['vehicle'] != ''):
                     dataPolicy[key]['file_url'] = ocr.saveFilePDF(d['images'], d['number_policy'] + '-' + d['start_date'] + '-' + d['end_date'] + '-' + d['vehicle'])
 
-     if islog == 1:
-          for key, data in dataPolicy.items():
-               for key2, d in data.items():  
-                    print(d)     
+     logHtml = ''
+     if islog == '1':
+          # for key, data in dataPolicy.items():
+          #      for key2, d in data.items():  
+          #           print(d)     
 
           for key, result in results.items():
                i = 0
-               print("<div style='background: #f3f3f3;padding-bottom: 20px;'><b style='font-size: 18px;padding-left:5px;padding-top:5px;'>Page nr: " + str(key) + "</b>") 
-               print("<pre>")
-               for r in result['texts']:
-                    print("     [" + str(i) + "] => " + r + "")
-                    i = i + 1
-               print("</pre></div>")
+               logHtml = logHtml + "<div style='background: #f3f3f3;padding-bottom: 20px;'><b style='font-size: 18px;padding-left:5px;padding-top:5px;'>Page nr: " + str(key) + "</b><hr>"
 
+               for r in result['texts']:
+                    logHtml = logHtml + "     [" + str(i) + "] => " + r + "<br>"
+                    i = i + 1
+               logHtml = logHtml + "</div>"
+
+     
 
      os.remove(fn)
 
-     response = {"status": 200, "data": dataPolicy}
+     response = {"status": 200, "data": dataPolicy, "log": logHtml}
      print(json.dumps(response))
-
-# ocr.generate('test.pdf')
+else:
+     response = {"status": 400, "data": [], "message": "Zły format pliku"}
+     print(json.dumps(response))
