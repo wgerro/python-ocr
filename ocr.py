@@ -53,8 +53,8 @@ def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
           emptyPage = False
           onlyTexts = []
           
-          if (filesize < 0.15):
-               emptyPage = True
+          # if (filesize < 0.15):
+          #      emptyPage = True
 
           if (emptyPage == False): #not empty image
                dataPage = []
