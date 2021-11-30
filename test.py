@@ -14,7 +14,7 @@ import mimetypes
 cgitb.enable()
 # print(os.environ.keys())
 
-allows_url = ['https://localhost', 'https://erp.avenir-as.pl', 'https://erp.avenir-as.pl/', 'http://192.168.1.42/', 'http://192.168.1.42', '192.168.1.42', 'https://api.avenir-as.pl/', 'https://api.avenir-as.pl', 'https://avenir-as.pl', 'https://avenir-as.pl/']
+allows_url = ['https://localhost']
 
 print("Access-Control-Allow-Headers: *")
 print("Access-Control-Allow-Methods: *")
