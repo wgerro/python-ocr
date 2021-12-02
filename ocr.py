@@ -5,6 +5,8 @@ from pdf2image import convert_from_path
 import os
 import re
 import mimetypes
+import numpy as np 
+import cv2
 
 def cmpY(a, b):
      if (a['yCenter'] <= b['yCenter']):
@@ -28,7 +30,6 @@ def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
      image_counter = 1
      config_txt = '--oem 3 --psm ' + str(psm)
      lineHeight = int(lineHeight)
-
      
      mimetype = mimetypes.guess_type(os.path.abspath(os.getcwd()) + '/' + file)[0] # 'application/pdf'
 
@@ -37,17 +38,19 @@ def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
           for page in pages:
                results[image_counter] = []
                filename = dir_folder_images + "/page_" + str(image_counter) + ".jpg"
-               page.save(filename, 'JPEG')
+               pages = Image.fromarray(imageSkew(np.array(page)))
+               pages.save(filename, 'JPEG')
                image_counter = image_counter + 1
      else:
           filename = dir_folder_images + "/page_" + str(image_counter) + ".jpg"
-          img = Image.open(file)
+          img = Image.fromarray(imageSkew(file, True))
           img.save(filename, "JPEG", quality=100, optimize=True, progressive=True)
           image_counter = 2
 
           
      for i in range(1, image_counter):
           filename = dir_folder_images + "/page_" + str(i) + ".jpg"
+          
           boxes = pytesseract.image_to_data(Image.open(filename), lang="pol", config=config_txt)
           filesize = float(os.path.getsize(filename)) / 1000000 #to mb
           emptyPage = False
@@ -125,6 +128,31 @@ def generate(file, lineHeight = 8, dpi = 200, psm = 6, removeFile = True):
           if removeFile:
                os.remove(filename)
      return results
+
+def imageSkew(image, isPath = False):
+     if isPath:
+          image = cv2.imread(image)
+          
+     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+     gray = cv2.bitwise_not(gray)
+     blur = cv2.GaussianBlur(gray,(5,5),0)
+     thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)[1]
+
+     coords = np.column_stack(np.where(thresh > 0))
+     angle = cv2.minAreaRect(coords)[-1]
+
+     if angle < -45:
+          angle = -(90 + angle)
+     else:
+          angle = -angle
+
+     (h, w) = image.shape[:2]
+     center = (w // 2, h // 2)
+     M = cv2.getRotationMatrix2D(center, angle, 1.0)
+     rotatedImage = cv2.warpAffine(image, M, (w, h),
+          flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+
+     return rotatedImage
 
 def saveFilePDF(images, title):
      title = title.replace('/', '')
